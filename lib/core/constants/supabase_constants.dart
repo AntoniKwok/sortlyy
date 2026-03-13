@@ -1,9 +1,9 @@
 class SupabaseConstants {
-  // Replace with your Supabase project URL and anon key
-  static const String supabaseUrl = 'https://your-project.supabase.co';
-  static const String supabaseAnonKey = 'your-anon-key';
-  
-  // Auth providers
-  static const String googleProvider = 'google';
-  static const String phoneProvider = 'phone';
+  SupabaseConstants._();
+
+  // Injected at build time via --dart-define-from-file=.env.json
+  // Never hardcode values here — keep this file committed to git.
+  static const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  static const String supabaseAnonKey =
+      String.fromEnvironment('SUPABASE_ANON_KEY');
 }

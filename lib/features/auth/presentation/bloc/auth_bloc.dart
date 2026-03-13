@@ -1,72 +1,43 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/utils/usecase.dart';
-import '../../domain/usecases/login_usecase.dart';
+import '../../../subscription/data/revenuecat_subscription_service.dart';
 import '../../domain/usecases/get_current_user_usecase.dart';
+import '../../domain/usecases/sign_in_with_apple_usecase.dart';
+import '../../domain/usecases/sign_in_with_google_usecase.dart';
+import '../../domain/usecases/sign_out_usecase.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final LoginUseCase loginUseCase;
-  final GetCurrentUserUseCase getCurrentUserUseCase;
-  StreamSubscription? _userSubscription;
+  final SignInWithGoogleUseCase signInWithGoogle;
+  final SignInWithAppleUseCase signInWithApple;
+  final SignOutUseCase signOut;
+  final GetCurrentUserUseCase getCurrentUser;
+
+  StreamSubscription? _authSubscription;
 
   AuthBloc({
-    required this.loginUseCase,
-    required this.getCurrentUserUseCase,
+    required this.signInWithGoogle,
+    required this.signInWithApple,
+    required this.signOut,
+    required this.getCurrentUser,
   }) : super(const AuthState.initial()) {
-    on<LoginRequested>(_onLoginRequested);
-    on<RegisterRequested>(_onRegisterRequested);
-    on<LogoutRequested>(_onLogoutRequested);
-    on<GetCurrentUser>(_onGetCurrentUser);
+    on<AuthStartedEvent>(_onStarted);
+    on<GoogleSignInRequestedEvent>(_onGoogleSignIn);
+    on<AppleSignInRequestedEvent>(_onAppleSignIn);
+    on<SignOutRequestedEvent>(_onSignOut);
 
-    // Start listening to user stream
-    add(const AuthEvent.getCurrentUser());
+    add(const AuthEvent.started());
   }
 
-  Future<void> _onLoginRequested(
-    LoginRequested event,
-    Emitter<AuthState> emit,
-  ) async {
-    emit(const AuthState.loading());
-
-    final result = await loginUseCase(LoginParams(
-      email: event.email,
-      password: event.password,
-    ));
-
-    result.fold(
-      (failure) => emit(AuthState.error(message: failure.message)),
-      (user) => emit(AuthState.authenticated(user: user)),
-    );
-  }
-
-  Future<void> _onRegisterRequested(
-    RegisterRequested event,
-    Emitter<AuthState> emit,
-  ) async {
-    emit(const AuthState.loading());
-    // Implement register logic similar to login
-  }
-
-  Future<void> _onLogoutRequested(
-    LogoutRequested event,
-    Emitter<AuthState> emit,
-  ) async {
-    emit(const AuthState.loading());
-    // Implement logout logic
-    emit(const AuthState.unauthenticated());
-  }
-
-  void _onGetCurrentUser(
-    GetCurrentUser event,
-    Emitter<AuthState> emit,
-  ) {
-    _userSubscription?.cancel();
-    _userSubscription = getCurrentUserUseCase(const NoParams()).listen(
+  void _onStarted(AuthStartedEvent event, Emitter<AuthState> emit) {
+    _authSubscription?.cancel();
+    _authSubscription = getCurrentUser(const NoParams()).listen(
       (result) {
         result.fold(
-          (failure) => emit(AuthState.error(message: failure.message)),
+          (_) => emit(const AuthState.unauthenticated()),
           (user) {
             if (user != null) {
               emit(AuthState.authenticated(user: user));
@@ -79,9 +50,54 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
   }
 
+  Future<void> _onGoogleSignIn(
+    GoogleSignInRequestedEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthState.loading());
+    final result = await signInWithGoogle(const NoParams());
+    result.fold(
+      (failure) => emit(AuthState.error(message: failure.message)),
+      (user) {
+        RevenueCatSubscriptionService.logIn(user.id).ignore();
+        emit(AuthState.authenticated(user: user));
+      },
+    );
+  }
+
+  Future<void> _onAppleSignIn(
+    AppleSignInRequestedEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthState.loading());
+    final result = await signInWithApple(const NoParams());
+    result.fold(
+      (failure) => emit(AuthState.error(message: failure.message)),
+      (user) {
+        RevenueCatSubscriptionService.logIn(user.id).ignore();
+        emit(AuthState.authenticated(user: user));
+      },
+    );
+  }
+
+  Future<void> _onSignOut(
+    SignOutRequestedEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthState.loading());
+    final result = await signOut(const NoParams());
+    result.fold(
+      (failure) => emit(AuthState.error(message: failure.message)),
+      (_) {
+        RevenueCatSubscriptionService.logOut().ignore();
+        emit(const AuthState.unauthenticated());
+      },
+    );
+  }
+
   @override
   Future<void> close() {
-    _userSubscription?.cancel();
+    _authSubscription?.cancel();
     return super.close();
   }
 }

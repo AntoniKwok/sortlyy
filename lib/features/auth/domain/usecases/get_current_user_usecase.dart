@@ -3,13 +3,13 @@ import '../../../../core/utils/usecase.dart';
 import '../entities/user.dart';
 import '../repositories/auth_repository.dart';
 
-class GetCurrentUserUseCase extends StreamUseCase<User?, NoParams> {
+class GetCurrentUserUseCase extends StreamUseCase<AppUser?, NoParams> {
   final AuthRepository repository;
 
   const GetCurrentUserUseCase({required this.repository});
 
   @override
-  ResultStream<User?> call(NoParams params) {
+  ResultStream<AppUser?> call(NoParams params) {
     return repository.getCurrentUser();
   }
 }

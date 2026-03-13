@@ -5,7 +5,11 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Flutter Base Project</string>
+	<string>Sortly</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Sortly needs access to your photos so you can swipe to clean your camera roll. Your photos never leave your device.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Sortly needs permission to save favorites to your photo library.</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
