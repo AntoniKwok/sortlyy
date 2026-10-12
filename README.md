@@ -25,14 +25,20 @@ Sortlyy lets you blaze through your camera roll one photo at a time — swipe ri
 
 ## Architecture
 
-`
+```
 lib/
 ├── core/ # DI, network, error handling, utils
 ├── features/ # Self-contained feature modules
 │ ├── auth/ # data / domain / presentation
-│ └── home/ # data / domain / presentation
-└── shared/ # Reusable widgets and themes
-`
+│ ├── onboarding/ # data / domain / presentation
+│ ├── subscription/ # data / domain / presentation
+│ ├── swipe/ # data / domain / presentation
+│ ├── settings/ # presentation
+│ └── dashboard/ # presentation
+├── shared/ # Reusable widgets and themes
+│ ├── themes/
+│ └── widgets
+```
 
 Each feature owns its data, domain, and presentation layers. Dependencies point inward — domain has no external dependencies.
 
